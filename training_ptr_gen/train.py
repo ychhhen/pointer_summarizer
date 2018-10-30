@@ -6,7 +6,7 @@ import time
 import tensorflow as tf
 import torch
 from model import Model
-from torch.nn.utils import clip_grad_norm
+from torch.nn.utils import clip_grad_norm_
 
 from custom_adagrad import AdagradCustom
 
@@ -80,16 +80,14 @@ class Train(object):
 
         self.optimizer.zero_grad()
 
-        encoder_outputs, encoder_hidden, max_encoder_output = self.model.encoder(enc_batch, enc_lens)
+        encoder_outputs, encoder_feature, encoder_hidden = self.model.encoder(enc_batch, enc_lens)
         s_t_1 = self.model.reduce_state(encoder_hidden)
-        if config.use_maxpool_init_ctx:
-            c_t_1 = max_encoder_output
 
         step_losses = []
         for di in range(min(max_dec_len, config.max_dec_steps)):
             y_t_1 = dec_batch[:, di]  # Teacher forcing
             final_dist, s_t_1,  c_t_1, attn_dist, p_gen, next_coverage = self.model.decoder(y_t_1, s_t_1,
-                                                        encoder_outputs, enc_padding_mask, c_t_1,
+                                                        encoder_outputs, encoder_feature, enc_padding_mask, c_t_1,
                                                         extra_zeros, enc_batch_extend_vocab,
                                                                            coverage, di)
             target = target_batch[:, di]
@@ -110,13 +108,13 @@ class Train(object):
 
         loss.backward()
 
-        clip_grad_norm(self.model.encoder.parameters(), config.max_grad_norm)
-        clip_grad_norm(self.model.decoder.parameters(), config.max_grad_norm)
-        clip_grad_norm(self.model.reduce_state.parameters(), config.max_grad_norm)
+        self.norm = clip_grad_norm_(self.model.encoder.parameters(), config.max_grad_norm)
+        clip_grad_norm_(self.model.decoder.parameters(), config.max_grad_norm)
+        clip_grad_norm_(self.model.reduce_state.parameters(), config.max_grad_norm)
 
         self.optimizer.step()
 
-        return loss.data.item(0)
+        return loss.item()
 
     def trainIters(self, n_iters, model_file_path=None):
         iter, running_avg_loss = self.setup_train(model_file_path)
