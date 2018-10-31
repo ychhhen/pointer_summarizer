@@ -15,22 +15,6 @@ if torch.cuda.is_available():
     torch.cuda.manual_seed_all(123)
 
 
-def init_lstm_wt(lstm):
-    for names in lstm._all_weights:
-        for name in names:
-            if name.startswith('weight_'):
-                wt = getattr(lstm, name)
-                wt.data.uniform_(-config.rand_unif_init_mag,
-                                 config.rand_unif_init_mag)
-            elif name.startswith('bias_'):
-                # set forget bias to 1
-                bias = getattr(lstm, name)
-                n = bias.size(0)
-                start, end = n // 4, n // 2
-                bias.data.fill_(0.)
-                bias.data[start:end].fill_(1.)
-
-
 def init_linear_wt(linear):
     linear.weight.data.normal_(std=config.trunc_norm_init_std)
     if linear.bias is not None:
@@ -70,7 +54,8 @@ class Encoder(nn.Module):
         output, hidden = self.lstm(packed)
 
         # h dim = B x t_k x n
-        encoder_outputs, _ = pad_packed_sequence(output, batch_first=True)
+        encoder_outputs, _ = pad_packed_sequence(
+            output, batch_first=True)
         encoder_outputs = encoder_outputs.contiguous()
 
         # B * t_k x 2*hidden_dim
@@ -137,20 +122,15 @@ class Attention(nn.Module):
         # B x t_k
         scores = scores.view(-1, t_k)
 
-        # B x t_k
-        attn_dist_ = F.softmax(scores, dim=1) * enc_padding_mask
+        attn_dist_ = F.softmax(scores, dim=1) * enc_padding_mask  # B x t_k
         normalization_factor = attn_dist_.sum(1, keepdim=True)
         attn_dist = attn_dist_ / normalization_factor
 
-        # B x 1 x t_k
-        attn_dist = attn_dist.unsqueeze(1)
-        # B x 1 x n
-        c_t = torch.bmm(attn_dist, encoder_outputs)
-        # B x 2*hidden_dim
-        c_t = c_t.view(-1, config.hidden_dim * 2)
+        attn_dist = attn_dist.unsqueeze(1)  # B x 1 x t_k
+        c_t = torch.bmm(attn_dist, encoder_outputs)  # B x 1 x n
+        c_t = c_t.view(-1, config.hidden_dim * 2)  # B x 2*hidden_dim
 
-        # B x t_k
-        attn_dist = attn_dist.view(-1, t_k)
+        attn_dist = attn_dist.view(-1, t_k)  # B x t_k
 
         if config.is_coverage:
             coverage = coverage.view(-1, t_k)
@@ -182,7 +162,7 @@ class Decoder(nn.Module):
             self.p_gen_linear = nn.Linear(
                 config.hidden_dim * 4 + config.emb_dim, 1)
 
-        # p_vocab
+        #p_vocab
         self.out1 = nn.Linear(config.hidden_dim * 3, config.hidden_dim)
         self.out2 = nn.Linear(config.hidden_dim, config.vocab_size)
         init_linear_wt(self.out2)
@@ -193,9 +173,9 @@ class Decoder(nn.Module):
 
         if not self.training and step == 0:
             h_decoder, c_decoder = s_t_1
-            # B x 2*hidden_dim
             s_t_hat = torch.cat((h_decoder.view(-1, config.hidden_dim),
-                                 c_decoder.view(-1, config.hidden_dim)), 1)
+                                 c_decoder.view(-1, config.hidden_dim)),
+                                1)  # B x 2*hidden_dim
             c_t, _, coverage_next = self.attention_network(
                 s_t_hat, encoder_outputs, encoder_feature, enc_padding_mask,
                 coverage)
@@ -206,9 +186,9 @@ class Decoder(nn.Module):
         lstm_out, s_t = self.lstm(x.unsqueeze(1), s_t_1)
 
         h_decoder, c_decoder = s_t
-        # B x 2*hidden_dim
         s_t_hat = torch.cat((h_decoder.view(-1, config.hidden_dim),
-                             c_decoder.view(-1, config.hidden_dim)), 1)
+                             c_decoder.view(-1, config.hidden_dim)),
+                            1)  # B x 2*hidden_dim
         c_t, attn_dist, coverage_next = self.attention_network(
             s_t_hat, encoder_outputs, encoder_feature, enc_padding_mask,
             coverage)
