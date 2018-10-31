@@ -1,7 +1,6 @@
 import os
 
-root_dir = os.path.expanduser(
-    "/Users/ashish/code/cs5984/cnn_dailymail_preprocessed/")
+root_dir = os.path.expanduser(".")
 
 train_data_path = os.path.join(root_dir, "finished_files/chunked/train_*")
 eval_data_path = os.path.join(root_dir, "finished_files/val.bin")
