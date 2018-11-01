@@ -1,4 +1,4 @@
-import queue as Queue
+import Queue
 import time
 from random import shuffle
 from threading import Thread

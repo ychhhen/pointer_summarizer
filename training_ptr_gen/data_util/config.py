@@ -1,6 +1,6 @@
 import os
 
-root_dir = os.path.expanduser(".")
+root_dir = os.path.expanduser("../dataset/news/output/")
 
 train_data_path = os.path.join(root_dir, "finished_files/chunked/train_*")
 eval_data_path = os.path.join(root_dir, "finished_files/val.bin")
