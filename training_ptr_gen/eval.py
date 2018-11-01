@@ -1,8 +1,8 @@
-from __future__ import unicode_literals, print_function, division
+from __future__ import division, print_function, unicode_literals
 
 import os
-import time
 import sys
+import time
 
 import tensorflow as tf
 import torch
@@ -10,12 +10,13 @@ import torch
 from data_util import config
 from data_util.batcher import Batcher
 from data_util.data import Vocab
-
 from data_util.utils import calc_running_avg_loss
-from train_util import get_input_from_batch, get_output_from_batch
+from log_util import get_logger
 from model import Model
+from train_util import get_input_from_batch, get_output_from_batch
 
 use_cuda = config.use_gpu and torch.cuda.is_available()
+LOGGER = get_logger('pointer.generator.eval')
 
 
 class Evaluate(object):
@@ -91,9 +92,9 @@ class Evaluate(object):
                 self.summary_writer.flush()
             print_interval = 1000
             if iter % print_interval == 0:
-                print('steps %d, seconds for %d batch: %.2f , loss: %f' %
-                      (iter, print_interval, time.time() - start,
-                       running_avg_loss))
+                LOGGER.info('steps %d, seconds for %d batch: %.2f , loss: %f' %
+                            (iter, print_interval, time.time() - start,
+                             running_avg_loss))
                 start = time.time()
             batch = self.batcher.next_batch()
 
