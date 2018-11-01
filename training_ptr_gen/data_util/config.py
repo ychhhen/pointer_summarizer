@@ -1,5 +1,7 @@
 import os
 
+from pathlib2 import Path
+
 root_dir = os.path.expanduser("../dataset/news/output/")
 
 train_data_path = os.path.join(root_dir, "finished_files/chunked/train_*")
@@ -34,3 +36,25 @@ max_iterations = 500000
 use_gpu = True
 
 lr_coverage = 0.15
+
+# Logging
+log_level = 'DEBUG'
+log_file = os.path.join(log_root, 'training_{}.log')
+
+
+def reset_path_variables():
+    global train_data_path, eval_data_path, decode_data_path, vocab_path
+    global log_root, log_file
+    train_data_path = os.path.join(root_dir, "finished_files/chunked/train_*")
+    eval_data_path = os.path.join(root_dir, "finished_files/val.bin")
+    decode_data_path = os.path.join(root_dir, "finished_files/test.bin")
+    vocab_path = os.path.join(root_dir, "finished_files/vocab")
+    log_root = os.path.join(root_dir, "log")
+    log_file = os.path.join(log_root, 'training_{}.log')
+
+
+def reset_log_variables():
+    global log_root, log_file
+    path = Path(log_root)
+    path.mkdir(parents=True, exist_ok=True)
+    log_file = os.path.join(log_root, 'training_{}.log')

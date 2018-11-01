@@ -1,8 +1,11 @@
+import csv
 import glob
 import random
 import struct
-import csv
+
 from tensorflow.core.example import example_pb2
+
+from log_util import get_logger
 
 # <s> and </s> are used in the data files to segment the abstracts into
 # sentences. They don't receive vocab ids.
@@ -23,6 +26,8 @@ STOP_DECODING = '[STOP]'
 # Note: none of <s>, </s>, [PAD], [UNK], [START], [STOP] should appear in
 # the vocab file.
 
+LOGGER = get_logger('pointer.generator.data')
+
 
 class Vocab(object):
     def __init__(self, vocab_file, max_size):
@@ -42,8 +47,8 @@ class Vocab(object):
             for line in vocab_f:
                 pieces = line.split()
                 if len(pieces) != 2:
-                    print(('Warning: incorrectly formatted line in ' +
-                           'vocabulary file: %s\n') % line)
+                    LOGGER.warning(('Warning: incorrectly formatted line in ' +
+                                    'vocabulary file: %s\n') % line)
                     continue
                 w = pieces[0]
                 if w in [
@@ -60,14 +65,15 @@ class Vocab(object):
                 self._id_to_word[self._count] = w
                 self._count += 1
                 if max_size != 0 and self._count >= max_size:
-                    print(("max_size of vocab was specified as %i; we now " +
-                           "have %i words. Stopping reading.") % (max_size,
-                                                                  self._count))
+                    LOGGER.info(
+                        ("max_size of vocab was specified as %i; we now " +
+                         "have %i words. Stopping reading.") % (max_size,
+                                                                self._count))
                     break
 
-        print(("Finished constructing vocabulary of %i total words. " +
-               "Last word added: %s") % (self._count,
-                                         self._id_to_word[self._count - 1]))
+        LOGGER.info(("Finished constructing vocabulary of %i total words. " +
+                     "Last word added: %s") %
+                    (self._count, self._id_to_word[self._count - 1]))
 
     def word2id(self, word):
         if word not in self._word_to_id:
@@ -83,7 +89,7 @@ class Vocab(object):
         return self._count
 
     def write_metadata(self, fpath):
-        print("Writing word embedding metadata file to %s..." % (fpath))
+        LOGGER.info("Writing word embedding metadata file to %s..." % (fpath))
         with open(fpath, "w") as f:
             fieldnames = ['word']
             writer = csv.DictWriter(f, delimiter="\t", fieldnames=fieldnames)
@@ -113,8 +119,8 @@ def example_generator(data_path, single_pass):
                                             reader.read(str_len))[0]
                 yield example_pb2.Example.FromString(example_str)
         if single_pass:
-            print("example_generator completed reading all datafiles. " +
-                  "No more data.")
+            LOGGER.info("example_generator completed reading all datafiles. " +
+                        "No more data.")
             break
 
 

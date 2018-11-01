@@ -1,15 +1,33 @@
-import os
-import pyrouge
+import datetime
 import logging
+import os
+
+import pyrouge
 import tensorflow as tf
+
+from log_util import get_logger
+
+LOGGER = get_logger('pointer.generator.utils')
+
+
+def get_time():
+    now = datetime.datetime.now()
+    return now.strftime('%Y-%m-%d %H:%M:%S')
+
+
+def time_diff_as_minutes(start, end):
+    start = datetime.datetime.strptime(start, '%Y-%m-%d %H:%M:%S')
+    end = datetime.datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
+    diff = end - start
+    return '{}m {}s'.format(diff.minute, diff.second)
 
 
 def print_results(article, abstract, decoded_output):
-    print("")
-    print('ARTICLE:  %s', article)
-    print('REFERENCE SUMMARY: %s', abstract)
-    print('GENERATED SUMMARY: %s', decoded_output)
-    print("")
+    LOGGER.info("===============================")
+    LOGGER.info('ARTICLE:  %s', article)
+    LOGGER.info('REFERENCE SUMMARY: %s', abstract)
+    LOGGER.info('GENERATED SUMMARY: %s', decoded_output)
+    LOGGER.info("===============================")
 
 
 def make_html_safe(s):
@@ -43,9 +61,9 @@ def rouge_log(results_dict, dir_to_write):
             val_ce = results_dict[key_ce]
             log_str += "%s: %.4f with confidence interval (%.4f, %.4f)\n" % (
                 key, val, val_cb, val_ce)
-    print(log_str)
+    LOGGER.info(log_str)
     results_file = os.path.join(dir_to_write, "ROUGE_results.txt")
-    print("Writing final ROUGE results to %s..." % (results_file))
+    LOGGER.info("Writing final ROUGE results to %s..." % (results_file))
     with open(results_file, "w") as f:
         f.write(log_str)
 

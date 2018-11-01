@@ -1,4 +1,5 @@
 import Queue
+import random
 import time
 from random import shuffle
 from threading import Thread
@@ -6,10 +7,8 @@ from threading import Thread
 import numpy as np
 import tensorflow as tf
 
-from data_util import config
-from data_util import data
+from data_util import config, data
 
-import random
 random.seed(1234)
 
 

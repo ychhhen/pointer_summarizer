@@ -1,22 +1,25 @@
-from __future__ import unicode_literals, print_function, division
+from __future__ import division, print_function, unicode_literals
 
 import os
 import time
+from argparse import ArgumentParser
 
 import tensorflow as tf
 import torch
-from model import Model
 from torch.nn.utils import clip_grad_norm_
 
 from custom_adagrad import AdagradCustom
-
 from data_util import config
 from data_util.batcher import Batcher
 from data_util.data import Vocab
 from data_util.utils import calc_running_avg_loss
+from log_util import get_logger
+from model import Model
 from train_util import get_input_from_batch, get_output_from_batch
+from utils import get_time, time_diff_as_minutes
 
-use_cuda = config.use_gpu and torch.cuda.is_available()
+USE_CUDA = config.use_gpu and torch.cuda.is_available()
+LOGGER = get_logger('pointer.generator.train')
 
 
 class Train(object):
@@ -77,7 +80,7 @@ class Train(object):
 
             if not config.is_coverage:
                 self.optimizer.load_state_dict(state['optimizer'])
-                if use_cuda:
+                if USE_CUDA:
                     for state in self.optimizer.state.values():
                         for k, v in state.items():
                             if torch.is_tensor(v):
@@ -87,9 +90,9 @@ class Train(object):
 
     def train_one_batch(self, batch):
         (enc_batch, enc_padding_mask, enc_lens, enc_batch_extend_vocab,
-         extra_zeros, c_t_1, coverage) = get_input_from_batch(batch, use_cuda)
+         extra_zeros, c_t_1, coverage) = get_input_from_batch(batch, USE_CUDA)
         (dec_batch, dec_padding_mask, max_dec_len, dec_lens_var,
-         target_batch) = get_output_from_batch(batch, use_cuda)
+         target_batch) = get_output_from_batch(batch, USE_CUDA)
 
         self.optimizer.zero_grad()
 
@@ -138,7 +141,11 @@ class Train(object):
     def trainIters(self, n_iters, model_file_path=None):
         iter, running_avg_loss = self.setup_train(model_file_path)
         start = time.time()
+        LOGGER.info('Starting training for {} iterations'.format(iter))
         while iter < n_iters:
+            iter_start = get_time()
+            LOGGER.debug('Starting iter = {} at time {}'.format(
+                iter + 1, iter_start))
             batch = self.batcher.next_batch()
             loss = self.train_one_batch(batch)
 
@@ -150,13 +157,44 @@ class Train(object):
                 self.summary_writer.flush()
             print_interval = 1000
             if iter % print_interval == 0:
-                print('steps %d, seconds for %d batch: %.2f , loss: %f' %
-                      (iter, print_interval, time.time() - start, loss))
+                LOGGER.info('steps %d, seconds for %d batch: %.2f , loss: %f' %
+                            (iter, print_interval, time.time() - start, loss))
                 start = time.time()
             if iter % 5000 == 0:
+                LOGGER.info('Saving model at iteration = {}'.format(iter + 1))
                 self.save_model(running_avg_loss, iter)
+            iter_end = get_time()
+            LOGGER.debug('Iteration {} ended at time {}'.format(
+                iter + 1, iter_end))
+            LOGGER.debug('Time taken for iteration {} = {}'.format(
+                iter + 1, time_diff_as_minutes(iter_start, iter_end)))
 
 
 if __name__ == '__main__':
+    parser = ArgumentParser('Pointer Generator Network Training Script')
+
+    parser.add_argument(
+        '-d',
+        '--directory',
+        help='Path to the directory containing the finished_files directory',
+        required=False)
+    parser.add_argument(
+        '--log_dir', help='Path to log directory', required=False)
+    args = parser.parse_args()
+
+    if args.directory:
+        config.root_dir = args.directory
+        config.reset_path_variables()
+        config.reset_log_variables()
+    if args.log_dir:
+        config.log_root = args.log_dir
+        config.reset_log_variables()
+
+    LOGGER.debug('Train data path = {}'.format(config.train_data_path))
+    LOGGER.debug('Evaluation data path = {}'.format(config.eval_data_path))
+    LOGGER.debug('Test data path = {}'.format(config.decode_data_path))
+    LOGGER.debug('Vocabulary = {}'.format(config.vocab_path))
+
+    LOGGER.info('Initializing trainer for pointer generator networks')
     train_processor = Train()
     train_processor.trainIters(config.max_iterations)
