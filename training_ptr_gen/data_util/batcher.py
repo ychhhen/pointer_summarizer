@@ -6,8 +6,8 @@ from threading import Thread
 import numpy as np
 import tensorflow as tf
 
-import config
-import data
+from data_util import config
+from data_util import data
 
 import random
 random.seed(1234)

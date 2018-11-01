@@ -158,5 +158,7 @@ class Train(object):
 
 
 if __name__ == '__main__':
+    import pdb
+    pdb.set_trace()
     train_processor = Train()
     train_processor.trainIters(config.max_iterations)
