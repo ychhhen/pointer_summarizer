@@ -22,11 +22,11 @@ def display_time(seconds, granularity=2):
     result = []
 
     for name, count in intervals:
-        value = seconds // count
+        value = int(seconds) / count
         if value:
             seconds -= value * count
             result.append("{}{}".format(value, name))
-    return ' '.join(result[:granularity])
+    return ' '.join(result[:granularity]) or '0s'
 
 
 def get_time():

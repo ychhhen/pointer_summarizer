@@ -12,11 +12,11 @@ from custom_adagrad import AdagradCustom
 from data_util import config
 from data_util.batcher import Batcher
 from data_util.data import Vocab
-from data_util.utils import calc_running_avg_loss
+from data_util.utils import (calc_running_avg_loss, get_time,
+                             time_diff_as_minutes)
 from log_util import get_logger
 from model import Model
 from train_util import get_input_from_batch, get_output_from_batch
-from data_util.utils import get_time, time_diff_as_minutes
 
 USE_CUDA = config.use_gpu and torch.cuda.is_available()
 LOGGER = get_logger('pointer.generator.train')
@@ -144,7 +144,7 @@ class Train(object):
         LOGGER.info('Starting training for {} iterations'.format(iter))
         while iter < n_iters:
             iter_start = get_time()
-            LOGGER.debug('Starting iter = {} at time {}'.format(
+            LOGGER.debug('Starting iteration {} at time {}'.format(
                 iter + 1, iter_start))
             batch = self.batcher.next_batch()
             loss = self.train_one_batch(batch)
