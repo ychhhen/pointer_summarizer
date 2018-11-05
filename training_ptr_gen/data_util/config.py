@@ -2,7 +2,7 @@ import os
 
 from pathlib2 import Path
 
-root_dir = os.path.expanduser("../dataset/news/output/")
+root_dir = os.path.expanduser("../dataset/news/")
 
 train_data_path = os.path.join(root_dir, "finished_files/chunked/train_*")
 eval_data_path = os.path.join(root_dir, "finished_files/val.bin")

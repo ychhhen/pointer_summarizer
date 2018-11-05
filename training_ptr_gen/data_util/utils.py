@@ -9,6 +9,25 @@ from log_util import get_logger
 
 LOGGER = get_logger('pointer.generator.utils')
 
+intervals = (
+    ('w', 604800),  # 60 * 60 * 24 * 7
+    ('d', 86400),    # 60 * 60 * 24
+    ('h', 3600),    # 60 * 60
+    ('m', 60),
+    ('s', 1),
+    )
+
+
+def display_time(seconds, granularity=2):
+    result = []
+
+    for name, count in intervals:
+        value = seconds // count
+        if value:
+            seconds -= value * count
+            result.append("{}{}".format(value, name))
+    return ' '.join(result[:granularity])
+
 
 def get_time():
     now = datetime.datetime.now()
@@ -19,7 +38,7 @@ def time_diff_as_minutes(start, end):
     start = datetime.datetime.strptime(start, '%Y-%m-%d %H:%M:%S')
     end = datetime.datetime.strptime(end, '%Y-%m-%d %H:%M:%S')
     diff = end - start
-    return '{}m {}s'.format(diff.minute, diff.second)
+    return display_time(diff.seconds)
 
 
 def print_results(article, abstract, decoded_output):

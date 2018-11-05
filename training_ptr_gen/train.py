@@ -16,7 +16,7 @@ from data_util.utils import calc_running_avg_loss
 from log_util import get_logger
 from model import Model
 from train_util import get_input_from_batch, get_output_from_batch
-from utils import get_time, time_diff_as_minutes
+from data_util.utils import get_time, time_diff_as_minutes
 
 USE_CUDA = config.use_gpu and torch.cuda.is_available()
 LOGGER = get_logger('pointer.generator.train')
