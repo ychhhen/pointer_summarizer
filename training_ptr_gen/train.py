@@ -14,6 +14,7 @@ from data_util.batcher import Batcher
 from data_util.data import Vocab
 from data_util.utils import (calc_running_avg_loss, get_time,
                              time_diff_as_minutes)
+from decode import BeamSearch
 from log_util import get_logger
 from model import Model
 from train_util import get_input_from_batch, get_output_from_batch
@@ -56,6 +57,7 @@ class Train(object):
         model_save_path = os.path.join(
             self.model_dir, 'model_%d_%d' % (iter, int(time.time())))
         torch.save(state, model_save_path)
+        return model_save_path
 
     def setup_train(self, model_file_path=None):
         self.model = Model(model_file_path)
@@ -138,10 +140,11 @@ class Train(object):
 
         return loss.item()
 
-    def trainIters(self, n_iters, model_file_path=None):
+    def trainIters(self, n_iters, model_file_path=None, evaluate=False):
         iter, running_avg_loss = self.setup_train(model_file_path)
         start = time.time()
         LOGGER.info('Starting training for {} iterations'.format(iter))
+
         while iter < n_iters:
             iter_start = get_time()
             LOGGER.debug('Starting iteration {} at time {}'.format(
@@ -162,7 +165,12 @@ class Train(object):
                 start = time.time()
             if iter % 5000 == 0:
                 LOGGER.info('Saving model at iteration = {}'.format(iter + 1))
-                self.save_model(running_avg_loss, iter)
+                model_path = self.save_model(running_avg_loss, iter)
+
+                if evaluate:
+                    beam_search_processor = BeamSearch(model_path)
+                    beam_search_processor.decode()
+
             iter_end = get_time()
             LOGGER.debug('Iteration {} ended at time {}'.format(
                 iter + 1, iter_end))
