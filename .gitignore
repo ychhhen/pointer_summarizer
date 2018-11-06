@@ -2,3 +2,6 @@
 *.bin
 venv/
 log/
+start_train.sh.*
+start_decode.sh.*
+start_eval.sh.*

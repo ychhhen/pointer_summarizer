@@ -15,7 +15,7 @@ from log_util import get_logger
 from model import Model
 from train_util import get_input_from_batch
 
-sys.setdefaultencoding('utf8')
+# sys.setdefaultencoding('utf8')
 
 use_cuda = config.use_gpu and torch.cuda.is_available()
 LOGGER = get_logger('pointer.generator.decode')
