@@ -39,7 +39,7 @@ lr_coverage = 0.15
 
 # Logging
 log_level = 'DEBUG'
-log_file = os.path.join(log_root, 'training_{}.log')
+log_file = os.path.join(log_root, '{}_{}.log')
 
 
 def reset_path_variables():
