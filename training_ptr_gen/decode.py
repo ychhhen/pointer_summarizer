@@ -94,6 +94,9 @@ class BeamSearch(object):
                 decoded_words = decoded_words
 
             original_abstract_sents = batch.original_abstracts_sents[0]
+            LOGGER.info('Decoded words = {}'.format(' '.join(decoded_words)))
+            LOGGER.info('Original abstract = {}'.format(
+                ' '.join(original_abstract_sents)))
 
             write_for_rouge(original_abstract_sents, decoded_words, counter,
                             self._rouge_ref_dir, self._rouge_dec_dir)
@@ -193,8 +196,8 @@ class BeamSearch(object):
                 # for each of the top 2*beam_size hyps:
                 for j in range(config.beam_size * 2):
                     new_beam = h.extend(
-                        token=topk_ids[i, j].data[0],
-                        log_prob=topk_log_probs[i, j].data[0],
+                        token=topk_ids[i, j].item(),
+                        log_prob=topk_log_probs[i, j].item(),
                         state=state_i,
                         context=context_i,
                         coverage=coverage_i)
