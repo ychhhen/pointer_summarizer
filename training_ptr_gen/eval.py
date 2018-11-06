@@ -16,7 +16,7 @@ from model import Model
 from train_util import get_input_from_batch, get_output_from_batch
 
 use_cuda = config.use_gpu and torch.cuda.is_available()
-LOGGER = get_logger('pointer.generator.eval')
+LOGGER = get_logger('pointer.generator.eval', run_type='evaluation')
 
 
 class Evaluate(object):
