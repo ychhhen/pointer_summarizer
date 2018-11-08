@@ -205,4 +205,4 @@ if __name__ == '__main__':
 
     LOGGER.info('Initializing trainer for pointer generator networks')
     train_processor = Train()
-    train_processor.trainIters(config.max_iterations, evaluate=True)
+    train_processor.trainIters(config.max_iterations, evaluate=False)
